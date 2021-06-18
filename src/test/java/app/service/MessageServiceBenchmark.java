@@ -32,7 +32,7 @@ public class MessageServiceBenchmark {
     private MessageService messageService;
 
     @Test
-    public void test() {
+    public void test() throws RunnerException {
         Options options = new OptionsBuilder()
                 .include(String.format("\\.%s\\.", this.getClass().getSimpleName()))
                 .warmupIterations(1)
@@ -42,12 +42,7 @@ public class MessageServiceBenchmark {
                 .shouldDoGC(true)
                 .shouldFailOnError(true)
                 .build();
-        try {
-            new Runner(options).run();
-        } catch (RunnerException e) {
-            e.printStackTrace();
-            fail();
-        }
+        new Runner(options).run();
     }
 
     @Benchmark
