@@ -5,8 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -30,9 +29,9 @@ public class Message {
     private String text;
 
     @Column(nullable = false)
-    private Calendar date;
+    private LocalDateTime date;
 
     public Message(User user, String channel, String text) {
-        this(0, user, channel, text, new GregorianCalendar());
+        this(0, user, channel, text, LocalDateTime.now());
     }
 }

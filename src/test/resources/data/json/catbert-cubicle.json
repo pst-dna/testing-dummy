@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1",
+    "sender": {
+      "id": "3",
+      "name": "dilbert"
+    },
+    "channel": "default",
+    "text": "My cubicle is sucking the life force out of me.",
+    "date": "2022-02-09T09:00:01.281"
+  },
+  {
+    "id": "2",
+    "sender": {
+      "id": "3",
+      "name": "dilbert"
+    },
+    "channel": "default",
+    "text": "I mean, it always has, but it seems like it's happening faster now.",
+    "date": "2022-02-09T09:00:02.281"
+  },
+  {
+    "id": "3",
+    "sender": {
+      "id": "4",
+      "name": "pointy haired boss"
+    },
+    "channel": "default",
+    "text": "...",
+    "date": "2022-02-09T09:00:03.281"
+  },
+  {
+    "id": "4",
+    "sender": {
+      "id": "4",
+      "name": "pointy haired boss"
+    },
+    "channel": "management",
+    "text": "They noticed.",
+    "date": "2022-02-09T10:00:02.281"
+  },
+  {
+    "id": "5",
+    "sender": {
+      "id": "5",
+      "name": "catbert"
+    },
+    "channel": "management",
+    "text": "<operates the LIFESUCK-3000 machine>",
+    "date": "2022-02-09T10:00:01.281"
+  }
+]

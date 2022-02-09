@@ -1,60 +1,61 @@
 
 package app.service;
 
-
 import app.entity.Message;
 import app.entity.User;
 import app.exception.UserNotFoundException;
 import app.repository.MessageRepository;
 import app.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Profile;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.List;
-import java.util.Optional;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Profile("test")
 @ExtendWith(SpringExtension.class)
-@Sql({"classpath:/data/messages.sql"})
 public class MessageServiceTest {
 
-    @Autowired
-    UserRepository userRepository;
+    @Mock
+    private UserRepository userRepository;
 
-    @Autowired
-    MessageRepository messageRepository;
+    @Mock
+    private MessageRepository messageRepository;
 
-    @Autowired
-    MessageService messageService;
+    @InjectMocks
+    private MessageService messageService;
 
     @Test
-    public void createMessageTest() {
-        // 1. init users
-        Optional<User> oa = userRepository.findById(1L);
-        Optional<User> ow = userRepository.findById(2L);
+    public void createMessageTest() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
 
-        assertTrue(oa.isPresent());
-        assertTrue(ow.isPresent());
-
-        User alice = oa.get();
-        User wally = ow.get();
+        // 1. init message
+        Message message = objectMapper.readValue(getClass().getClassLoader().getResource("data/json/message.json"), Message.class);
 
         // 2. test create messages with users
-        assertEquals("msg a1", messageService.create(alice, "default", "msg a1").getText());
-        assertEquals("wally", messageService.create(wally, "default", "msg w1").getSender().getName());
+        Message msg = new Message(message.getSender(), message.getChannel(), message.getText());
+        Mockito.doReturn(message).when(messageRepository).save(ArgumentMatchers.refEq(msg, "id", "date"));
+        try (MockedStatic<LocalDateTime> dt = Mockito.mockStatic(LocalDateTime.class)) {
+            dt.when(LocalDateTime::now).thenReturn(message.getDate());
+            assertEquals(message, messageService.create(message.getSender(), message.getChannel(), message.getText()));
+        }
 
         // 3. test create messages with user ids
+        Mockito.doReturn(Optional.of(message.getSender())).when(userRepository).findById(message.getSender().getId());
         try {
-            assertEquals("msg a2", messageService.create(1, "default", "msg a2").getText());
-            assertEquals("default", messageService.create(2, "default", "msg w2").getChannel());
+            assertEquals(message, messageService.create(message.getSender().getId(), message.getChannel(), message.getText()));
         } catch (UserNotFoundException e) {
             e.printStackTrace();
             fail();
@@ -62,24 +63,42 @@ public class MessageServiceTest {
 
         // 4. test create message for missing user
         assertThrows(UserNotFoundException.class, () -> messageService.create(3, "default", "msg3"));
-        assertEquals(7, messageRepository.findAll().size());
     }
 
     @Test
-    public void getMessagesTest() {
-        // 1. test length of the list
-        List<Message> messagesMain = messageService.get("main");
-        assertEquals(3, messagesMain.size());
+    public void getMessagesTest() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
 
-        // 2. test origin channel
-        for (Message m : messagesMain)
-            assertEquals("main", m.getChannel());
+        List<Message> messages = Arrays.asList(objectMapper.readValue(getClass().getClassLoader().getResource("data/json/wally-covers-for-alice.json"), Message[].class));
+        Mockito.doReturn(messages).when(messageRepository).findAllByChannel("default");
+        Mockito.doReturn(Collections.emptyList()).when(messageRepository).findAllByChannel("none");
 
-        // 3. test date sorting
-        for (int i = 1; i < messagesMain.size(); i++)
-            assertTrue(messagesMain.get(i).getDate().getTimeInMillis() >= messagesMain.get(i - 1).getDate().getTimeInMillis());
-
-        // 4. test for empty channel
+        assertIterableEquals(messages, messageService.get("default"));
         assertEquals(0, messageService.get("none").size());
+    }
+
+    @Test
+    public void getMessagesInOrderTest() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        List<Message> messages = Arrays.asList(objectMapper.readValue(getClass().getClassLoader().getResource("data/json/catbert-cubicle.json"), Message[].class));
+        Mockito
+                .doReturn(messages.stream().sequential().filter(m -> m.getChannel().equals("default")).collect(Collectors.toList()))
+                .when(messageRepository)
+                .findAllByChannel("default");
+        Mockito
+                .doReturn(messages.stream().sequential().filter(m -> m.getChannel().equals("management")).collect(Collectors.toList()))
+                .when(messageRepository)
+                .findAllByChannel("management");
+
+        List<Message> messagesInDefault = messageService.get("default");
+        for (int i = 1; i < messagesInDefault.size(); i++)
+            assertTrue(messagesInDefault.get(i - 1).getDate().isBefore(messagesInDefault.get(i).getDate()));
+
+        List<Message> messagesInManagement = messageService.get("management");
+        for (int i = 1; i < messagesInManagement.size(); i++)
+            assertFalse(messagesInManagement.get(i - 1).getDate().isBefore(messagesInManagement.get(i).getDate()));
     }
 }
