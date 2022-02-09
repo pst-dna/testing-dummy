@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "sender": {
+      "id": "1",
+      "name": "alice"
+    },
+    "channel": "default",
+    "text": "I'm back from vacation. Did you have any problems covering for me?",
+    "date": "2022-02-09T09:00:00.281"
+  },
+  {
+    "id": "2",
+    "sender": {
+      "id": "2",
+      "name": "wally"
+    },
+    "channel": "default",
+    "text": "No problem at all. I saved all of your work for when you got back.",
+    "date": "2022-02-09T09:00:01.281"
+  },
+  {
+    "id": "3",
+    "sender": {
+      "id": "1",
+      "name": "alice"
+    },
+    "channel": "default",
+    "text": "I HATE YOU WITH THE HEAT OF A THOUSAND SUNS!",
+    "date": "2022-02-09T09:00:02.281"
+  },
+  {
+    "id": "4",
+    "sender": {
+      "id": "2",
+      "name": "wally"
+    },
+    "channel": "default",
+    "text": "How was your vacation? Was it relaxing? <Takes a sip of coffee>",
+    "date": "2022-02-09T09:00:03.281"
+  }
+]
